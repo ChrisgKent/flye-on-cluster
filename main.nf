@@ -13,9 +13,11 @@ process assemble {
     
     tag "$name"
     
-    publishDir "${params.output}/flye_${name}", mode: 'copy'
+    publishDir "${params.input_s3}/flye_${name}", mode: 'copy'
     cpus = params.flye_cpu
     memory = params.flye_ram
+    disk = params.flye_disk
+    errorStrategy 'finish'
 
 
     input: 
@@ -32,5 +34,5 @@ process assemble {
 workflow {
     s3_input_ch = Channel.fromPath("${params.input_s3}/*.fastq.gz", type: "file" ).view()
     s3_with_names = s3_input_ch.map{[it.name.toString().split('.fastq.gz')[0],it]}.view()
-    assemble(s3_with_names)
+    assemble_ch = assemble(s3_with_names)
 }
