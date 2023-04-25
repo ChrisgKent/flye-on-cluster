@@ -7,11 +7,11 @@ log.info """\
     """
     .stripIndent()
 
-process assemble {
+process flye_assemble {
     // INPUT (Fasta)
     // OUTPUT (flye output dir)
     
-    tag "$name"
+    // tag "$name"
     
     publishDir "${params.input_s3}/flye_${name}", mode: 'copy'
     cpus = params.flye_cpu
@@ -21,7 +21,7 @@ process assemble {
 
 
     input: 
-        tuple val(name) path(reads_fa)
+        tuple val(name), path(reads_fa)
     output:
         path "flye_${name}"
 
@@ -32,7 +32,11 @@ process assemble {
 }
 
 workflow {
-    s3_input_ch = Channel.fromPath("${params.input_s3}/*.fastq.gz", type: "file" ).view()
-    s3_with_names = s3_input_ch.map{[it.name.toString().split('.fastq.gz')[0],it]}.view()
-    assemble_ch = assemble(s3_with_names)
+    s3_input_ch = Channel.fromPath("${params.input_s3}/*.fastq.gz", type: "file" )
+    s3_with_names = s3_input_ch.map{[it.name.toString().split('.fastq.gz')[0],it]}
+
+    flye_assemble(s3_with_names)
+
+    // flye_assemble.out
+    //     .set{assemble_ch}
 }
